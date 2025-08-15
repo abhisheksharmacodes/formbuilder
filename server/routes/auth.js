@@ -17,6 +17,7 @@ const querystring = require('querystring');
 const router = express.Router();
 
 const User = require('../models/User');
+const { ensureConnection } = require('../db/connectDB');
 
 // Read required configuration from environment variables
 const {
@@ -145,6 +146,9 @@ router.get('/airtable/callback', async (req, res) => {
 		}
 
 		// 3) Upsert the user in our database with the Airtable identifier and access token
+		// Ensure database connection is active
+		await ensureConnection();
+		
 		let user = await User.findOne({ airtableId }).select('+airtableAccessToken');
 		if (!user) {
 			user = new User({

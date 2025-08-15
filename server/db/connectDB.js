@@ -16,10 +16,18 @@ let isConnected = false;
  * Only connects once and caches the connection for reuse.
  */
 async function connectToDatabase() {
-  // If already connected, return the existing connection
+  // If already connected and connection is healthy, return the existing connection
   if (isConnected && mongoose.connection.readyState === 1) {
-    console.log('🔄 Using existing MongoDB connection');
-    return mongoose.connection;
+    // Test the connection to make sure it's still alive
+    try {
+      await mongoose.connection.db.admin().ping();
+      console.log('🔄 Using existing MongoDB connection');
+      return mongoose.connection;
+    } catch (error) {
+      console.log('⚠️  Existing connection failed ping, reconnecting...');
+      isConnected = false;
+      mongoose.connection.close();
+    }
   }
 
   const mongoUri = process.env.MONGODB_URI;
@@ -39,10 +47,16 @@ async function connectToDatabase() {
     // Set connection options for better reliability
     const options = {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       bufferCommands: false,
       bufferMaxEntries: 0,
+      // Add these options for better connection stability
+      keepAlive: true,
+      keepAliveInitialDelay: 300000, // 5 minutes
+      autoReconnect: true,
+      reconnectTries: Number.MAX_VALUE,
+      reconnectInterval: 1000,
     };
 
     console.log('🔗 Connecting to MongoDB...');
@@ -68,6 +82,10 @@ async function connectToDatabase() {
       isConnected = false;
     });
 
+    // Test the connection immediately
+    await mongoose.connection.db.admin().ping();
+    console.log('🏓 MongoDB connection ping successful');
+
     return mongoose.connection;
   } catch (error) {
     console.error('❌ Failed to connect to MongoDB:', error.message);
@@ -84,10 +102,22 @@ function getConnectionStatus() {
     isConnected,
     readyState: mongoose.connection.readyState,
     database: mongoose.connection.name,
-    collections: Object.keys(mongoose.connection.collections || {})
+    collections: Object.keys(mongoose.connection.collections || {}),
+    connectionState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   };
 }
 
-module.exports = { connectToDatabase, getConnectionStatus };
+/**
+ * Ensure database connection is active before operations
+ */
+async function ensureConnection() {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('⚠️  Connection not ready, reconnecting...');
+    await connectToDatabase();
+  }
+  return mongoose.connection;
+}
+
+module.exports = { connectToDatabase, getConnectionStatus, ensureConnection };
 
 

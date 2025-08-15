@@ -12,6 +12,7 @@ const router = express.Router();
 
 const User = require('../models/User');
 const Form = require('../models/Form');
+const { ensureConnection } = require('../db/connectDB');
 
 /**
  * Helper: fetch the user's Airtable access token by MongoDB user id.
@@ -23,6 +24,9 @@ async function getUserAccessTokenById(userId) {
 		err.statusCode = 400;
 		throw err;
 	}
+
+	// Ensure database connection is active
+	await ensureConnection();
 
 	const user = await User.findById(userId).select('+airtableAccessToken');
 	if (!user || !user.airtableAccessToken) {
@@ -216,6 +220,9 @@ router.post('/:userId', async (req, res) => {
             return res.status(400).json({ message: 'fields must be an array' });
         }
 
+        // Ensure database connection is active
+        await ensureConnection();
+
         // Optionally ensure user exists for clearer error messages
         const userExists = await User.exists({ _id: userId });
         if (!userExists) {
@@ -253,6 +260,9 @@ router.get('/user/:userId', async (req, res) => {
             return res.status(400).json({ message: 'userId is required' });
         }
 
+        // Ensure database connection is active
+        await ensureConnection();
+
         const forms = await Form.find({ user: userId }).sort({ createdAt: -1 });
         return res.status(200).json({ forms });
     } catch (error) {
@@ -275,6 +285,9 @@ router.get('/:formId', async (req, res) => {
         if (!formId) {
             return res.status(400).json({ message: 'formId is required' });
         }
+
+        // Ensure database connection is active
+        await ensureConnection();
 
         const form = await Form.findById(formId);
         if (!form) {
@@ -311,6 +324,9 @@ router.post('/submit/:formId', async (req, res) => {
         if (!data || typeof data !== 'object') {
             return res.status(400).json({ message: 'submission payload `data` is required and must be an object' });
         }
+
+        // Ensure database connection is active
+        await ensureConnection();
 
         // 1) Find the saved form in our DB to get baseId, tableId, and creator user
         const form = await Form.findById(formId);
