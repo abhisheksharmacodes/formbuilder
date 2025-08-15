@@ -853,7 +853,7 @@ function FormViewer({ onSwitchView }: { onSwitchView: () => void }) {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{form.name}</h2>
             
             <form className="space-y-6">
-              {form.fields.map((field, index) => (
+              {form.fields.map((field) => (
                 <div key={field.fieldId} className="border-b border-gray-200 pb-6 last:border-b-0">
                   <label className="block text-sm font-medium text-gray-900 mb-2">
                     {field.label}
