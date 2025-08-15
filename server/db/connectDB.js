@@ -18,16 +18,8 @@ let isConnected = false;
 async function connectToDatabase() {
   // If already connected and connection is healthy, return the existing connection
   if (isConnected && mongoose.connection.readyState === 1) {
-    // Test the connection to make sure it's still alive
-    try {
-      await mongoose.connection.db.admin().ping();
-      console.log('🔄 Using existing MongoDB connection');
-      return mongoose.connection;
-    } catch (error) {
-      console.log('⚠️  Existing connection failed ping, reconnecting...');
-      isConnected = false;
-      mongoose.connection.close();
-    }
+    console.log('🔄 Using existing MongoDB connection');
+    return mongoose.connection;
   }
 
   const mongoUri = process.env.MONGODB_URI;
@@ -44,19 +36,11 @@ async function connectToDatabase() {
       mongoose.set('strictQuery', true);
     }
 
-    // Set connection options for better reliability
+    // Use minimal, widely-supported connection options
     const options = {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      bufferCommands: false,
-      bufferMaxEntries: 0,
-      // Add these options for better connection stability
-      keepAlive: true,
-      keepAliveInitialDelay: 300000, // 5 minutes
-      autoReconnect: true,
-      reconnectTries: Number.MAX_VALUE,
-      reconnectInterval: 1000,
     };
 
     console.log('🔗 Connecting to MongoDB...');
@@ -81,10 +65,6 @@ async function connectToDatabase() {
       console.log('🟡 MongoDB connection disconnected');
       isConnected = false;
     });
-
-    // Test the connection immediately
-    await mongoose.connection.db.admin().ping();
-    console.log('🏓 MongoDB connection ping successful');
 
     return mongoose.connection;
   } catch (error) {
