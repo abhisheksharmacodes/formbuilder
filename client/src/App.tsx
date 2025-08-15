@@ -238,6 +238,36 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
       return
     }
 
+    // Validate form fields
+    const validationErrors: string[] = []
+    
+    // Check if form name is provided
+    if (!formName.trim()) {
+      validationErrors.push('Form name is required')
+    }
+    
+    // Check if all form fields have required properties
+    formFields.forEach((field, index) => {
+      if (!field.label.trim()) {
+        validationErrors.push(`Field ${index + 1}: Question label is required`)
+      }
+      
+      // Check conditional logic rules
+      field.conditionalLogic.rules.forEach((rule, ruleIndex) => {
+        if (!rule.fieldId) {
+          validationErrors.push(`Field ${index + 1}: Rule ${ruleIndex + 1} - Please select a question to watch`)
+        }
+        if (!rule.value && rule.value !== 0) {
+          validationErrors.push(`Field ${index + 1}: Rule ${ruleIndex + 1} - Please enter a value`)
+        }
+      })
+    })
+    
+    if (validationErrors.length > 0) {
+      setError('Please fix the following validation errors:\n' + validationErrors.join('\n'))
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess('')
@@ -378,7 +408,7 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
                   </div>
                   <button
                     onClick={() => addFieldToForm(field)}
-                    className="w-full bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    className="w-full cursor-pointer bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
                   >
                     Add to Form
                   </button>
@@ -404,8 +434,13 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="Enter form name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  formName.trim() === '' ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {formName.trim() === '' && (
+                <p className="text-xs text-red-600 mt-1">Form name is required</p>
+              )}
             </div>
 
             {/* Form Fields */}
@@ -432,8 +467,14 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
                         type="text"
                         value={field.label}
                         onChange={(e) => updateFormField(fieldIndex, { label: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          field.label.trim() === '' ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter question label"
                       />
+                      {field.label.trim() === '' && (
+                        <p className="text-xs text-red-600 mt-1">Question label is required</p>
+                      )}
                     </div>
 
                     <div>
@@ -487,8 +528,22 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
 
                   {/* Conditional Logic */}
                   <div className="border-t border-gray-200 pt-4">
+                    <div className="mb-4">
+                      <h4 className="text-md font-medium text-gray-900 mb-2">Conditional Logic</h4>
+                      <p className="text-sm text-gray-600">
+                        Control when this question appears based on answers to other questions. 
+                        This question will only be shown when the specified conditions are met.
+                      </p>
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-xs text-blue-800 font-medium mb-1">Example:</p>
+                        <p className="text-xs text-blue-700">
+                          "Show this question when: Question 1 equals 'Yes' AND Question 2 equals 'Employee'"
+                        </p>
+                      </div>
+                    </div>
+                    
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-md font-medium text-gray-900">Conditional Logic</h4>
+                      <span className="text-sm font-medium text-gray-700">Visibility Rules:</span>
                       <button
                         onClick={() => addConditionalRule(fieldIndex)}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -500,7 +555,7 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
                     {field.conditionalLogic.rules.length > 0 && (
                       <div className="mb-3">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Show this field when:
+                          Show this question when:
                         </label>
                         <select
                           value={field.conditionalLogic.match}
@@ -521,48 +576,74 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
                     <div className="space-y-3">
                       {field.conditionalLogic.rules.map((rule, ruleIndex) => (
                         <div key={ruleIndex} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-md">
-                          <select
-                            value={rule.fieldId}
-                            onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { fieldId: e.target.value })}
-                            className="px-2 py-1 border border-gray-300 rounded-md text-sm flex-1"
-                          >
-                            <option value="">Select field...</option>
-                            {formFields.map((f, i) => (
-                              <option key={i} value={f.fieldId} disabled={i === fieldIndex}>
-                                {f.label}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-500 mb-1">Watch this question:</label>
+                            <select
+                              value={rule.fieldId}
+                              onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { fieldId: e.target.value })}
+                              className={`w-full px-2 py-1 border rounded-md text-sm ${
+                                !rule.fieldId ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                            >
+                              <option value="">Select question to watch...</option>
+                              {formFields.map((f, i) => (
+                                <option key={i} value={f.fieldId} disabled={i === fieldIndex}>
+                                  {f.label}
+                                </option>
+                              ))}
+                            </select>
+                            {!rule.fieldId && (
+                              <p className="text-xs text-red-600 mt-1">Please select a question</p>
+                            )}
+                          </div>
 
-                          <select
-                            value={rule.operator}
-                            onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { operator: e.target.value as 'equals' | 'notEquals' | 'contains' | 'gt' | 'lt' })}
-                            className="px-2 py-1 border border-gray-300 rounded-md text-sm"
-                          >
-                            <option value="equals">equals</option>
-                            <option value="notEquals">not equals</option>
-                            <option value="contains">contains</option>
-                            <option value="gt">greater than</option>
-                            <option value="lt">less than</option>
-                          </select>
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-500 mb-1">Has this answer:</label>
+                            <select
+                              value={rule.operator}
+                              onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { operator: e.target.value as 'equals' | 'notEquals' | 'contains' | 'gt' | 'lt' })}
+                              className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"
+                            >
+                              <option value="equals">equals</option>
+                              <option value="notEquals">not equals</option>
+                              <option value="contains">contains</option>
+                              <option value="gt">greater than</option>
+                              <option value="lt">less than</option>
+                            </select>
+                          </div>
 
-                          <input
-                            type="text"
-                            value={String(rule.value)}
-                            onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { value: e.target.value })}
-                            placeholder="Value"
-                            className="px-2 py-1 border border-gray-300 rounded-md text-sm flex-1"
-                          />
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-500 mb-1">Value:</label>
+                            <input
+                              type="text"
+                              value={String(rule.value)}
+                              onChange={(e) => updateConditionalRule(fieldIndex, ruleIndex, { value: e.target.value })}
+                              placeholder="Enter value"
+                              className={`w-full px-2 py-1 border rounded-md text-sm ${
+                                (!rule.value && rule.value !== 0) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                            />
+                            {(!rule.value && rule.value !== 0) && (
+                              <p className="text-xs text-red-600 mt-1">Please enter a value</p>
+                            )}
+                          </div>
 
                           <button
                             onClick={() => removeConditionalRule(fieldIndex, ruleIndex)}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className="text-red-600 hover:text-red-800 text-sm p-1"
+                            title="Remove rule"
                           >
                             ×
                           </button>
                         </div>
                       ))}
                     </div>
+
+                    {field.conditionalLogic.rules.length === 0 && (
+                      <p className="text-sm text-gray-500 italic">
+                        No conditions set. This question will always be visible.
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -640,6 +721,10 @@ function FormViewer({ onSwitchView }: { onSwitchView: () => void }) {
       : results.some(Boolean)
   }
 
+  // Count visible fields for better UX
+  const visibleFields = form?.fields.filter(field => isFieldVisible(field)) || []
+  const totalFields = form?.fields.length || 0
+
   // Fetch form definition
   const fetchForm = async () => {
     if (!formId) return
@@ -675,6 +760,24 @@ function FormViewer({ onSwitchView }: { onSwitchView: () => void }) {
   const submitForm = async () => {
     if (!form) return
 
+    // Validate required fields
+    const validationErrors: string[] = []
+    const visibleFields = form.fields.filter(field => isFieldVisible(field))
+    
+    visibleFields.forEach(field => {
+      if (field.required) {
+        const value = formResponses[field.fieldId]
+        if (!value || (Array.isArray(value) && value.length === 0) || (typeof value === 'string' && value.trim() === '')) {
+          validationErrors.push(`${field.label} is required`)
+        }
+      }
+    })
+    
+    if (validationErrors.length > 0) {
+      setError('Please fill in all required fields:\n' + validationErrors.join('\n'))
+      return
+    }
+
     setSubmitting(true)
     setError('')
     setSuccess('')
@@ -705,87 +808,130 @@ function FormViewer({ onSwitchView }: { onSwitchView: () => void }) {
 
   // Render form field based on type
   const renderField = (field: FormField) => {
-    if (!isFieldVisible(field)) return null
+    if (!isFieldVisible(field)) {
+      return (
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
+          <p className="text-sm text-gray-500 italic">
+            This question is hidden based on conditional logic. 
+            Answer other questions to make it visible.
+          </p>
+        </div>
+      )
+    }
 
     const value = formResponses[field.fieldId] || ''
+    const isInvalid = field.required && (!value || (Array.isArray(value) && value.length === 0) || (typeof value === 'string' && value.trim() === ''))
 
     switch (field.type) {
       case 'shortText':
         return (
-          <input
-            type="text"
-            value={value as string}
-            onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <div>
+            <input
+              type="text"
+              value={value as string}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
+              placeholder={field.placeholder}
+              required={field.required}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
         )
 
       case 'longText':
         return (
-          <textarea
-            value={value as string}
-            onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <div>
+            <textarea
+              value={value as string}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
+              placeholder={field.placeholder}
+              required={field.required}
+              rows={4}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
         )
 
       case 'singleSelect':
         return (
-          <select
-            value={value as string}
-            onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
-            required={field.required}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Select an option...</option>
-            {field.options?.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <select
+              value={value as string}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
+              required={field.required}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Select an option...</option>
+              {field.options?.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
         )
 
       case 'multipleSelect':
         return (
-          <div className="space-y-2">
-            {field.options?.map((option) => (
-              <label key={option.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={(value as string[] || []).includes(option.id)}
-                  onChange={(e) => {
-                    const currentValues = (value as string[]) || []
-                    const newValues = e.target.checked
-                      ? [...currentValues, option.id]
-                      : currentValues.filter(v => v !== option.id)
-                    handleInputChange(field.fieldId, newValues)
-                  }}
-                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">{option.name}</span>
-              </label>
-            ))}
+          <div>
+            <div className="space-y-2">
+              {field.options?.map((option) => (
+                <label key={option.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={(value as string[] || []).includes(option.id)}
+                    onChange={(e) => {
+                      const currentValues = (value as string[]) || []
+                      const newValues = e.target.checked
+                        ? [...currentValues, option.id]
+                        : currentValues.filter(v => v !== option.id)
+                      handleInputChange(field.fieldId, newValues)
+                    }}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{option.name}</span>
+                </label>
+              ))}
+            </div>
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
           </div>
         )
 
       case 'attachment':
         return (
-          <input
-            type="file"
-            multiple
-            onChange={(e) => {
-              const files = Array.from(e.target.files || [])
-              const fileUrls = files.map(file => URL.createObjectURL(file))
-              handleInputChange(field.fieldId, fileUrls)
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <div>
+            <input
+              type="file"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || [])
+                const fileUrls = files.map(file => URL.createObjectURL(file))
+                handleInputChange(field.fieldId, fileUrls)
+              }}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
         )
 
       default:
@@ -852,6 +998,45 @@ function FormViewer({ onSwitchView }: { onSwitchView: () => void }) {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{form.name}</h2>
             
+            {/* Conditional Logic Info */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <h3 className="text-sm font-medium text-blue-800 mb-2">ℹ️ How Conditional Logic Works</h3>
+              <p className="text-sm text-blue-700 mb-2">
+                Some questions may be hidden based on your answers to other questions. 
+                This creates a dynamic form that adapts to your responses.
+              </p>
+              <p className="text-xs text-blue-600">
+                Showing {visibleFields.length} of {totalFields} questions
+              </p>
+            </div>
+            
+            {/* Validation Summary */}
+            {(() => {
+              const requiredFields = visibleFields.filter(field => field.required)
+              const filledRequiredFields = requiredFields.filter(field => {
+                const value = formResponses[field.fieldId]
+                return value && (Array.isArray(value) ? value.length > 0 : (typeof value === 'string' ? value.trim() !== '' : true))
+              })
+              
+              if (requiredFields.length > 0) {
+                return (
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+                    <h3 className="text-sm font-medium text-green-800 mb-2">📋 Form Progress</h3>
+                    <p className="text-sm text-green-700 mb-2">
+                      Required fields: {filledRequiredFields.length} of {requiredFields.length} completed
+                    </p>
+                    <div className="w-full bg-green-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${requiredFields.length > 0 ? (filledRequiredFields.length / requiredFields.length) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )
+              }
+              return null
+            })()}
+
             <form className="space-y-6">
               {form.fields.map((field) => (
                 <div key={field.fieldId} className="border-b border-gray-200 pb-6 last:border-b-0">
