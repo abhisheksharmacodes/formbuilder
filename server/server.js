@@ -39,21 +39,27 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/forms', formRoutes);
 
-// Determine the port to listen on (defaults to 5000 for local dev)
-const PORT = process.env.PORT || 5000;
+// Export the Express app for Vercel
+module.exports = app;
 
-// Establish the database connection first, then start the HTTP server
-connectToDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
+// Only start the server if this file is run directly (not imported by Vercel)
+if (require.main === module) {
+  // Determine the port to listen on (defaults to 5000 for local dev)
+  const PORT = process.env.PORT || 5000;
+
+  // Establish the database connection first, then start the HTTP server
+  connectToDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        // eslint-disable-next-line no-console
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((error) => {
       // eslint-disable-next-line no-console
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.error('Failed to start the server due to database connection error:', error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error('Failed to start the server due to database connection error:', error);
-    process.exit(1);
-  });
+}
 
 
