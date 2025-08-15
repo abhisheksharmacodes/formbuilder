@@ -69,7 +69,7 @@ function FormBuilder({ onSwitchView }: { onSwitchView: () => void }) {
   const [success, setSuccess] = useState<string>('')
 
   // Backend API base URL
-  const API_BASE = 'http://localhost:5000/api'
+  const API_BASE = 'https://formbuilder-back.vercel.app/api'
 
 
 
