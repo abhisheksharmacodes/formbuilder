@@ -32,7 +32,13 @@ app.use(express.json({ limit: '1mb' }));
 
 // Simple health check endpoint for uptime monitoring and local diagnostics
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  const { getConnectionStatus } = require('./db/connectDB');
+  const dbStatus = getConnectionStatus();
+  
+  res.status(200).json({ 
+    status: 'ok',
+    database: dbStatus
+  });
 });
 
 // API route mounting (actual handlers to be implemented later)
