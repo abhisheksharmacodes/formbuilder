@@ -370,6 +370,36 @@ router.post('/submit/:formId', async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/forms/:formId
+ *
+ * Delete a form by its ID. This will remove the form from the database.
+ */
+router.delete('/:formId', async (req, res) => {
+    const { formId } = req.params;
+
+    try {
+        if (!formId) {
+            return res.status(400).json({ message: 'formId is required' });
+        }
+
+        // Ensure database connection is active
+        await ensureConnection();
+
+        const form = await Form.findByIdAndDelete(formId);
+        if (!form) {
+            return res.status(404).json({ message: 'Form not found' });
+        }
+
+        return res.status(200).json({ message: 'Form deleted successfully' });
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error deleting form:', error);
+        const status = error.statusCode || 500;
+        return res.status(status).json({ message: 'Unable to delete form', error: error.message });
+    }
+});
+
 module.exports = router;
 
 
