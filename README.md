@@ -1,5 +1,7 @@
 # BustBrain - Dynamic Form Builder with Airtable Integration
 
+User ID (for testing): 64f8a1b2c3d4e5f678901234
+
 ## Overview
 
 BustBrain is a full-stack web application that enables users to create dynamic, conditional forms connected to Airtable databases. The application features a powerful Form Builder for creating forms with conditional logic and a Form Viewer for filling out and submitting forms. All form submissions are automatically saved to the corresponding Airtable tables.
