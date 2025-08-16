@@ -34,12 +34,12 @@ router.get('/callback', async (req, res) => {
   if (error) {
     console.error('OAuth error:', error, error_description)
     // Redirect to frontend with error
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
     return res.redirect(`${frontendUrl}/oauth/callback?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(error_description || '')}`)
   }
 
   if (!code) {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
     return res.redirect(`${frontendUrl}/oauth/callback?error=no_code`)
   }
 
@@ -100,7 +100,7 @@ router.get('/callback', async (req, res) => {
     await user.save()
 
     // Redirect to frontend with user data
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
     const userData = encodeURIComponent(JSON.stringify({
       id: user._id,
       airtableId: user.airtableId,
@@ -113,7 +113,7 @@ router.get('/callback', async (req, res) => {
 
   } catch (error) {
     console.error('OAuth callback error:', error)
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
     return res.redirect(`${frontendUrl}/oauth/callback?error=oauth_failed&error_description=${encodeURIComponent('Failed to complete OAuth flow')}`)
   }
 })
