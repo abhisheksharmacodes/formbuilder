@@ -1,69 +1,142 @@
-# React + TypeScript + Vite
+# Form Builder Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React application for building and managing dynamic forms connected to Airtable.
 
-Currently, two official plugins are available:
+## 🏗️ Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+client/src/
+├── components/           # Reusable UI components
+│   ├── FormBuilder.tsx  # Form creation interface
+│   ├── Dashboard.tsx    # Form management dashboard
+│   └── FormFiller.tsx   # Form completion interface
+├── types/               # Shared TypeScript interfaces
+│   └── index.ts        # Common type definitions
+├── App.tsx             # Main application component
+├── main.tsx            # Application entry point
+└── index.css           # Global styles
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🎯 Components Overview
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### **FormBuilder**
+- **Purpose**: Create and configure dynamic forms
+- **Features**:
+  - Connect to Airtable bases and tables
+  - Add form fields with validation
+  - Configure conditional logic rules
+  - Live form preview
+  - Save forms to backend
+  - **Form URL Generation**: Automatically generates shareable form URLs
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### **Dashboard**
+- **Purpose**: Manage all saved forms
+- **Features**:
+  - View form statistics
+  - List all user forms with shareable URLs
+  - View detailed form information
+  - Delete forms
+  - Quick navigation to form builder
+  - **Form URLs**: Display and copy form URLs for sharing
+
+### **FormFiller**
+- **Purpose**: Complete form submissions
+- **Features**:
+  - Dynamic form rendering
+  - Conditional logic support
+  - Field validation
+  - Submit responses to backend
+  - Responsive design
+  - **Form URL Display**: Shows the current form's shareable URL
+
+## 🚀 Getting Started
+
+1. **Install Dependencies**:
+   ```bash
+   cd client
+   npm install
+   ```
+
+2. **Start Development Server**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for Production**:
+   ```bash
+   npm run build
+   ```
+
+## 🔧 Configuration
+
+The application requires a backend server running at `https://formbuilder-back.vercel.app/api`. Ensure the backend is properly configured with:
+
+- MongoDB connection
+- Airtable OAuth credentials
+- Required API endpoints
+
+## 📱 Features
+
+- **Modern UI**: Clean, responsive design with Tailwind CSS
+- **Type Safety**: Full TypeScript support with shared interfaces
+- **Component Architecture**: Modular, maintainable code structure
+- **Form Validation**: Client-side validation with visual feedback
+- **Conditional Logic**: Dynamic form behavior based on user input
+- **Real-time Preview**: See form changes as you build
+- **Responsive Design**: Works on all device sizes
+
+## 🎨 Styling
+
+The application uses Tailwind CSS for styling with:
+- Consistent color scheme
+- Responsive grid layouts
+- Interactive hover states
+- Professional form styling
+- Accessible design patterns
+
+## 🔄 State Management
+
+Each component manages its own state using React hooks:
+- `useState` for local component state
+- `useEffect` for side effects and API calls
+- `useCallback` for performance optimization
+- Props for parent-child communication
+
+## 📊 API Integration
+
+Components communicate with the backend through:
+- RESTful API endpoints
+- JSON data exchange
+- Error handling and user feedback
+- Loading states and progress indicators
+
+## 🧪 Development
+
+- **TypeScript**: Strict type checking enabled
+- **ESLint**: Code quality and consistency
+- **Component Isolation**: Each component is self-contained
+- **Shared Types**: Common interfaces in `types/index.ts`
+- **Modular Structure**: Easy to maintain and extend
+
+## 🚀 Deployment
+
+The application can be deployed to:
+- Vercel (recommended)
+- Netlify
+- Any static hosting service
+
+Build the project and deploy the `dist` folder contents.
+
+## 📝 Contributing
+
+1. Follow the existing component structure
+2. Use shared types from `types/index.ts`
+3. Maintain consistent styling with Tailwind CSS
+4. Add proper error handling and loading states
+5. Test responsive behavior on different screen sizes
+
+## 🔗 Related Files
+
+- **Backend**: `../server/` - Express.js API server
+- **Database**: MongoDB with Mongoose ODM
+- **External**: Airtable REST API integration

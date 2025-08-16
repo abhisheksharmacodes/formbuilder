@@ -350,6 +350,16 @@ router.post('/submit/:formId', async (req, res) => {
         // stores Airtable field IDs instead, translate here using `form.fields`.
         const fieldsPayload = { ...data };
 
+        // Process attachments: skip attachment fields for now as Airtable requires public URLs
+        const skippedAttachments = [];
+        for (const [fieldName, fieldValue] of Object.entries(fieldsPayload)) {
+            if (Array.isArray(fieldValue) && fieldValue.length > 0 && fieldValue[0].base64) {
+                // Skip attachment fields as Airtable requires public URLs
+                skippedAttachments.push(fieldName);
+                delete fieldsPayload[fieldName];
+            }
+        }
+
         const url = `https://api.airtable.com/v0/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}`;
         const response = await axios.post(
             url,
@@ -361,7 +371,12 @@ router.post('/submit/:formId', async (req, res) => {
             throw new Error(`Failed to create Airtable record with status ${response && response.status}`);
         }
 
-        return res.status(201).json({ record: response.data });
+        const responseData = { record: response.data };
+        if (skippedAttachments.length > 0) {
+            responseData.warning = `Attachment fields (${skippedAttachments.join(', ')}) were skipped. Airtable requires public URLs for attachments.`;
+        }
+
+        return res.status(201).json(responseData);
     } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error submitting form to Airtable:', error.response?.data || error.message || error);
