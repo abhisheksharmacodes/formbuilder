@@ -35,10 +35,11 @@ export default function FormBuilder() {
   const canSelectTable = !!selectedBase
   const canConfigureFormDetails = !!selectedTable
 
-  // Fetch bases when component mounts
-  const fetchBases = useCallback(async () => {
+  // Fetch bases function
+  const fetchBases = async () => {
+    console.log('fetch bases called with userId:', userId)
     if (!userId) return
-
+    console.log('fetch bases working')
     setLoading(true)
     setError('')
     
@@ -55,13 +56,7 @@ export default function FormBuilder() {
     } finally {
       setLoading(false)
     }
-  }, [userId])
-
-  useEffect(() => {
-    if (userId) {
-      fetchBases()
-    }
-  }, [fetchBases])
+  }
 
   // Fetch tables when base is selected
   const fetchTables = async (baseId: string) => {
