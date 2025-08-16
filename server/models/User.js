@@ -5,39 +5,55 @@
  * their Airtable account and to access the Airtable API on their behalf.
  */
 
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
-const UserSchema = new mongoose.Schema(
-  {
-    // The user's Airtable account identifier (unique per Airtable user)
-    airtableId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
-
-    // OAuth access token to act on behalf of the user against Airtable's API
-    // Marked as `select: false` to avoid returning it from queries by default
-    airtableAccessToken: {
-      type: String,
-      required: true,
-      select: false,
-    },
-
-    // Human-readable name of the user (as obtained from Airtable or user input)
-    name: {
-      type: String,
-      required: false,
-      trim: true,
-    },
+const userSchema = new mongoose.Schema({
+  airtableId: {
+    type: String,
+    required: true,
+    unique: true
   },
-  {
-    timestamps: true, // createdAt and updatedAt
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  accessToken: {
+    type: String,
+    required: true
+  },
+  refreshToken: {
+    type: String,
+    required: true
+  },
+  tokenExpiresAt: {
+    type: Date,
+    required: true
+  },
+  airtableProfile: {
+    type: Object,
+    default: {}
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
-);
+})
 
-module.exports = mongoose.model('User', UserSchema);
+// Update the updatedAt field before saving
+userSchema.pre('save', function(next) {
+  this.updatedAt = new Date()
+  next()
+})
+
+module.exports = mongoose.model('User', userSchema)
 
 

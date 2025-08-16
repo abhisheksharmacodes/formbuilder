@@ -11,7 +11,6 @@ import CustomAlert from './CustomAlert'
 
 // Form Builder Component
 export default function FormBuilder() {
-  const [userId, setUserId] = useState<string>('')
   const [bases, setBases] = useState<AirtableBase[]>([])
   const [tables, setTables] = useState<AirtableTable[]>([])
   const [fields, setFields] = useState<AirtableField[]>([])
@@ -41,6 +40,10 @@ export default function FormBuilder() {
     message: '',
     type: 'info'
   })
+
+  // Get user from localStorage
+  const user = JSON.parse(localStorage.getItem('airtable_user') || '{}')
+  const userId = user.id
 
   const API_BASE = 'https://formbuilder-back.vercel.app/api/forms'
 
@@ -142,10 +145,20 @@ export default function FormBuilder() {
 
   // Add field to form
   const addField = (field: AirtableField) => {
+    // Generate a unique field ID to prevent conflicts when adding the same field multiple times
+    const uniqueId = `${field.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // Map Airtable field types to our supported types
+    let mappedType = field.type
+    if (field.type === 'singleSelect' && field.options && field.options.length > 0) {
+      // Allow users to choose between single and multiple select for select fields
+      mappedType = 'singleSelect'
+    }
+    
     const newFormField: FormField = {
-      fieldId: field.id,
+      fieldId: uniqueId,
       label: field.name,
-      type: field.type,
+      type: mappedType,
       placeholder: '',
       helpText: '',
       required: false,
@@ -409,6 +422,38 @@ export default function FormBuilder() {
           </div>
         )
       
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={value as number || ''}
+            onChange={(e) => handlePreviewInputChange(field.fieldId, e.target.valueAsNumber || '')}
+            placeholder="Enter a number"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        )
+      
+      case 'email':
+        return (
+          <input
+            type="email"
+            value={value as string}
+            onChange={(e) => handlePreviewInputChange(field.fieldId, e.target.value)}
+            placeholder="Enter email address"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        )
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value as string}
+            onChange={(e) => handlePreviewInputChange(field.fieldId, e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        )
+      
       case 'attachment':
         return (
           <div>
@@ -451,19 +496,15 @@ export default function FormBuilder() {
           </div>
         )}
 
-        {/* User ID Input */}
+        {/* User Info */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            User ID (to access your Airtable bases)
-          </label>
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="Enter your user ID"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Connected to Airtable</h3>
+              <p className="text-sm text-gray-600">
+                Logged in as {user.name || user.email}
+              </p>
+            </div>
             <button
               onClick={fetchBases}
               disabled={!userId || loading}
@@ -617,12 +658,30 @@ export default function FormBuilder() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-2">Field Type</label>
-                      <input
-                        type="text"
+                      <select
                         value={field.type}
-                        disabled
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                      />
+                        onChange={(e) => updateField(index, { type: e.target.value as any })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="shortText">Short Text</option>
+                        <option value="longText">Long Text</option>
+                        <option value="singleSelect">Single Select</option>
+                        <option value="multipleSelect">Multiple Select</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="date">Date</option>
+                        <option value="attachment">Attachment</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {field.type === 'shortText' && 'Single line text input'}
+                        {field.type === 'longText' && 'Multi-line text area'}
+                        {field.type === 'singleSelect' && 'Dropdown with single choice'}
+                        {field.type === 'multipleSelect' && 'Checkboxes for multiple choices'}
+                        {field.type === 'number' && 'Numeric input field'}
+                        {field.type === 'email' && 'Email address input with validation'}
+                        {field.type === 'date' && 'Date picker input'}
+                        {field.type === 'attachment' && 'File upload field'}
+                      </p>
                     </div>
 
                     <div>

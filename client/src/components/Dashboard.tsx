@@ -10,13 +10,16 @@ export default function Dashboard({
   onCreateForm: () => void
   onViewForm: (formId: string) => void
 }) {
-  const [userId, setUserId] = useState<string>('')
   const [forms, setForms] = useState<FormDefinitionWithId[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
   const [selectedForm, setSelectedForm] = useState<FormDefinitionWithId | null>(null)
   const [showFormDetails, setShowFormDetails] = useState<boolean>(false)
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState<boolean>(false)
+
+  // Get user from localStorage
+  const user = JSON.parse(localStorage.getItem('airtable_user') || '{}')
+  const userId = user.id
   const [customAlert, setCustomAlert] = useState<{
     isOpen: boolean
     title: string
@@ -134,19 +137,15 @@ export default function Dashboard({
           </div>
         )}
 
-        {/* User ID Input */}
+        {/* User Info */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            User ID (to load your forms)
-          </label>
-          <div className="flex flex-col sm:flex-row space-x-2">
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="Enter your user ID"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Your Forms</h3>
+              <p className="text-sm text-gray-600">
+                Logged in as {user.name || user.email}
+              </p>
+            </div>
             <button
               onClick={fetchForms}
               disabled={!userId || loading}

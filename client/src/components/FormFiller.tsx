@@ -267,6 +267,62 @@ export default function FormFiller({ formId, onBack }: { formId: string; onBack:
           </div>
         )
 
+      case 'number':
+        return (
+          <div>
+            <input
+              type="number"
+              value={value as number || ''}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.valueAsNumber || '')}
+              placeholder={field.placeholder}
+              required={field.required}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
+        )
+      
+      case 'email':
+        return (
+          <div>
+            <input
+              type="email"
+              value={value as string}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
+              placeholder={field.placeholder}
+              required={field.required}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-transparent'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
+        )
+      
+      case 'date':
+        return (
+          <div>
+            <input
+              type="date"
+              value={value as string}
+              onChange={(e) => handleInputChange(field.fieldId, e.target.value)}
+              required={field.required}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {isInvalid && (
+              <p className="text-xs text-red-600 mt-1">This field is required</p>
+            )}
+          </div>
+        )
+      
       case 'attachment':
         return (
           <div>

@@ -20,6 +20,7 @@ const { connectToDatabase } = require('./db/connectDB');
 // Routers (placeholder implementations live under `routes/`)
 const authRoutes = require('./routes/auth');
 const formRoutes = require('./routes/forms');
+const oauthRoutes = require('./routes/oauth');
 
 // Create the Express application instance
 const app = express();
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 // API route mounting (actual handlers to be implemented later)
 app.use('/api/auth', authRoutes);
 app.use('/api/forms', formRoutes);
+app.use('/api/oauth', oauthRoutes);
 
 // Export the Express app for Vercel
 module.exports = app;
