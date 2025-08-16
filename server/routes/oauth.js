@@ -29,18 +29,14 @@ router.get('/auth', (req, res) => {
 
 // Handle OAuth callback
 router.get('/callback', async (req, res) => {
-  const { code, state, error, error_description } = req.query
+  const { code, state, error } = req.query
 
   if (error) {
-    console.error('OAuth error:', error, error_description)
-    // Redirect to frontend with error
-    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
-    return res.redirect(`${frontendUrl}/oauth/callback?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(error_description || '')}`)
+    return res.status(400).json({ error: `OAuth error: ${error}` })
   }
 
   if (!code) {
-    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
-    return res.redirect(`${frontendUrl}/oauth/callback?error=no_code`)
+    return res.status(400).json({ error: 'Authorization code not provided' })
   }
 
   try {
@@ -99,22 +95,21 @@ router.get('/callback', async (req, res) => {
 
     await user.save()
 
-    // Redirect to frontend with user data
-    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
-    const userData = encodeURIComponent(JSON.stringify({
-      id: user._id,
-      airtableId: user.airtableId,
-      email: user.email,
-      name: user.name,
-      profile: user.airtableProfile
-    }))
-    
-    return res.redirect(`${frontendUrl}/oauth/callback?success=true&user=${userData}`)
+    // Return success with user info (excluding sensitive data)
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        airtableId: user.airtableId,
+        email: user.email,
+        name: user.name,
+        profile: user.airtableProfile
+      }
+    })
 
   } catch (error) {
     console.error('OAuth callback error:', error)
-    const frontendUrl = process.env.FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app'
-    return res.redirect(`${frontendUrl}/oauth/callback?error=oauth_failed&error_description=${encodeURIComponent('Failed to complete OAuth flow')}`)
+    res.status(500).json({ error: 'Failed to complete OAuth flow' })
   }
 })
 
