@@ -1,5 +1,6 @@
 const express = require('express')
 const axios = require('axios')
+const crypto = require('crypto')
 const User = require('../models/User')
 const router = express.Router()
 
@@ -16,7 +17,14 @@ router.get('/auth', (req, res) => {
     return res.status(500).json({ error: 'OAuth not configured' })
   }
 
-  const state = Math.random().toString(36).substring(7)
+  // Generate cryptographically secure state parameter
+  const state = crypto.randomBytes(32).toString('hex')
+  const stateExpiry = Date.now() + (10 * 60 * 1000) // 10 minutes from now
+  
+  // Store state and expiry in session
+  req.session.oauthState = state
+  req.session.oauthStateExpiry = stateExpiry
+  
   const authUrl = `${AIRTABLE_AUTH_URL}?` +
     `client_id=${encodeURIComponent(AIRTABLE_CLIENT_ID)}` +
     `&redirect_uri=${encodeURIComponent(AIRTABLE_REDIRECT_URI)}` +
@@ -24,7 +32,7 @@ router.get('/auth', (req, res) => {
     `&scope=data.records:read%20data.records:write%20schema.bases:read` +
     `&state=${state}`
 
-  res.json({ authUrl, state })
+  res.json({ authUrl })
 })
 
 // Handle OAuth callback
@@ -38,6 +46,31 @@ router.get('/callback', async (req, res) => {
   if (!code) {
     return res.status(400).json({ error: 'Authorization code not provided' })
   }
+
+  // Verify state parameter
+  if (!state) {
+    return res.status(400).json({ error: 'State parameter is required' })
+  }
+
+  if (!req.session.oauthState) {
+    return res.status(400).json({ error: 'No OAuth state found in session. Please restart the OAuth flow.' })
+  }
+
+  if (state !== req.session.oauthState) {
+    return res.status(400).json({ error: 'Invalid state parameter. Possible CSRF attack.' })
+  }
+
+  // Check state expiration
+  if (Date.now() > req.session.oauthStateExpiry) {
+    // Clear expired state
+    delete req.session.oauthState
+    delete req.session.oauthStateExpiry
+    return res.status(400).json({ error: 'OAuth state has expired. Please restart the OAuth flow.' })
+  }
+
+  // Clear state from session after successful verification
+  delete req.session.oauthState
+  delete req.session.oauthStateExpiry
 
   try {
     // Exchange authorization code for access token

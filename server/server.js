@@ -13,6 +13,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
 
 // Database connection helper
 const { connectToDatabase } = require('./db/connectDB');
@@ -28,8 +29,21 @@ const app = express();
 // Global middleware
 // - CORS: allow cross-origin requests from the frontend during local development
 // - JSON parser: parse incoming request bodies with JSON payloads
+// - Session: for OAuth state management
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
+
+// Configure session middleware for OAuth state management
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 10 * 60 * 1000 // 10 minutes
+  }
+}));
 
 // Simple health check endpoint for uptime monitoring and local diagnostics
 app.get('/health', (req, res) => {

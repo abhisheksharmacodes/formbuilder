@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import CustomAlert from './CustomAlert'
 
 interface LoginProps {
@@ -24,8 +24,13 @@ export default function Login({ onLogin }: LoginProps) {
   const handleAirtableLogin = async () => {
     setLoading(true)
     try {
-      // Direct redirect to OAuth authorization URL
-      const authUrl = `${API_BASE}/auth/airtable`
+      // Get OAuth authorization URL
+      const response = await fetch(`${API_BASE}/oauth/auth`)
+      if (!response.ok) {
+        throw new Error('Failed to get OAuth URL')
+      }
+
+      const { authUrl } = await response.json()
       
       // Open OAuth popup
       const popup = window.open(
@@ -35,43 +40,18 @@ export default function Login({ onLogin }: LoginProps) {
       )
 
       // Listen for OAuth callback
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return
-        
-        if (event.data.type === 'OAUTH_SUCCESS' && event.data.userId) {
-          clearInterval(checkPopup)
-          setLoading(false)
-          popup?.close()
-          
-          // Create user object with the userId
-          const user = {
-            id: event.data.userId,
-            // Add other user properties as needed
-          }
-          onLogin(user)
-          window.removeEventListener('message', messageHandler)
-        } else if (event.data.type === 'OAUTH_ERROR') {
-          clearInterval(checkPopup)
-          setLoading(false)
-          popup?.close()
-          
-          setCustomAlert({
-            isOpen: true,
-            title: 'Authentication Failed',
-            message: event.data.error || 'OAuth authentication failed',
-            type: 'error'
-          })
-          window.removeEventListener('message', messageHandler)
-        }
-      }
-      
-      window.addEventListener('message', messageHandler)
-      
       const checkPopup = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkPopup)
           setLoading(false)
-          window.removeEventListener('message', messageHandler)
+          
+          // Check if we have user data in localStorage (set by callback page)
+          const userData = localStorage.getItem('airtable_user')
+          if (userData) {
+            const user = JSON.parse(userData)
+            localStorage.removeItem('airtable_user') // Clean up
+            onLogin(user)
+          }
         }
       }, 1000)
 

@@ -165,8 +165,8 @@ router.get('/airtable/callback', async (req, res) => {
 
 		// 4) Redirect back to the frontend application with the user identifier.
 		// Choose a sensible default if FRONTEND_URL is not provided.
-		const frontendBase = FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app';
-		const redirectUrl = `${frontendBase}/oauth-success?userId=${encodeURIComponent(String(user._id))}`;
+		const frontendBase = FRONTEND_URL || 'https://bustbrain-formbuilder.vercel.app/';
+		const redirectUrl = `${frontendBase}?userId=${encodeURIComponent(String(user._id))}`;
 		return res.redirect(redirectUrl);
 	} catch (error) {
 		// eslint-disable-next-line no-console
