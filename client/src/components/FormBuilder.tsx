@@ -7,6 +7,7 @@ import type {
   FormDefinition,
   ConditionalRule
 } from '../types'
+import CustomAlert from './CustomAlert'
 
 // Form Builder Component
 export default function FormBuilder() {
@@ -27,6 +28,19 @@ export default function FormBuilder() {
   const [saving, setSaving] = useState<boolean>(false)
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [previewResponses, setPreviewResponses] = useState<Record<string, string | string[] | number | boolean | File[]>>({})
+  const [customAlert, setCustomAlert] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'warning' | 'info'
+    showCopyButton?: boolean
+    copyText?: string
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
 
   const API_BASE = 'https://formbuilder-back.vercel.app/api/forms'
 
@@ -269,16 +283,14 @@ export default function FormBuilder() {
       
       // Show success message with form URL
       const formUrl = `https://bustbrain-formbuilder.vercel.app/form/${result.form._id}`
-      const successMessage = `Form saved successfully!\n\nForm URL: ${formUrl}\n\nYou can share this URL with others to fill out your form.`
-      alert(successMessage)
-      
-      // Copy URL to clipboard
-      try {
-        await navigator.clipboard.writeText(formUrl)
-        console.log('Form URL copied to clipboard:', formUrl)
-      } catch (err) {
-        console.log('Could not copy to clipboard:', err)
-      }
+      setCustomAlert({
+        isOpen: true,
+        title: 'Form Saved Successfully!',
+        message: `Your form has been saved and is ready to use.\n\nForm URL: ${formUrl}\n\nYou can share this URL with others to fill out your form.`,
+        type: 'success',
+        showCopyButton: true,
+        copyText: formUrl
+      })
       
       console.log('Form saved:', result)
       
@@ -315,6 +327,10 @@ export default function FormBuilder() {
       ...prev,
       [fieldId]: value
     }))
+  }
+
+  const closeAlert = () => {
+    setCustomAlert(prev => ({ ...prev, isOpen: false }))
   }
 
   const isFieldVisibleInPreview = (field: FormField) => {
@@ -762,6 +778,17 @@ export default function FormBuilder() {
             </button>
           </div>
         )}
+
+        {/* Custom Alert */}
+        <CustomAlert
+          isOpen={customAlert.isOpen}
+          onClose={closeAlert}
+          title={customAlert.title}
+          message={customAlert.message}
+          type={customAlert.type}
+          showCopyButton={customAlert.showCopyButton}
+          copyText={customAlert.copyText}
+        />
       </div>
     </div>
   )

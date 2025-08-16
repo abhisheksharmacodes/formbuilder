@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { FormDefinitionWithId } from '../types'
+import CustomAlert from './CustomAlert'
 
 // Dashboard Component
 export default function Dashboard({ 
@@ -16,6 +17,18 @@ export default function Dashboard({
   const [selectedForm, setSelectedForm] = useState<FormDefinitionWithId | null>(null)
   const [showFormDetails, setShowFormDetails] = useState<boolean>(false)
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState<boolean>(false)
+  const [customAlert, setCustomAlert] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'warning' | 'info'
+    onConfirm?: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
 
   const API_BASE = 'https://formbuilder-back.vercel.app/api'
 
@@ -44,9 +57,17 @@ export default function Dashboard({
 
   // Delete a form
   const deleteForm = async (formId: string) => {
-    if (!confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
-      return
-    }
+    setCustomAlert({
+      isOpen: true,
+      title: 'Delete Form',
+      message: 'Are you sure you want to delete this form? This action cannot be undone.',
+      type: 'warning',
+      onConfirm: () => performDelete(formId)
+    })
+  }
+
+  const performDelete = async (formId: string) => {
+    setCustomAlert(prev => ({ ...prev, isOpen: false }))
 
     try {
       const response = await fetch(`${API_BASE}/forms/${formId}`, {
@@ -308,6 +329,16 @@ export default function Dashboard({
             </div>
           </div>
         )}
+
+        {/* Custom Alert */}
+        <CustomAlert
+          isOpen={customAlert.isOpen}
+          onClose={() => setCustomAlert(prev => ({ ...prev, isOpen: false }))}
+          title={customAlert.title}
+          message={customAlert.message}
+          type={customAlert.type}
+          onConfirm={customAlert.onConfirm}
+        />
       </div>
     </div>
   )

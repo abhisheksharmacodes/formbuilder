@@ -26,32 +26,34 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Global Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex space-x-8">
-            <button
-              onClick={switchToBuilder}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                currentViewMode === 'builder'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Form Builder
-            </button>
-            <button
-              onClick={switchToDashboard}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                currentViewMode === 'dashboard'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Dashboard
-            </button>
+      {!location.pathname.includes('/form/') && (
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex space-x-8">
+              <button
+                onClick={switchToBuilder}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
+                  currentViewMode === 'builder'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Form Builder
+              </button>
+              <button
+                onClick={switchToDashboard}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
+                  currentViewMode === 'dashboard'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Dashboard
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Content Area */}
       <div className="py-8">

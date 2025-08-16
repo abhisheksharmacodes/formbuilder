@@ -6,6 +6,7 @@ import type {
   FormDefinition, 
   FormResponse 
 } from '../types'
+import CustomAlert from './CustomAlert'
 
 // Form Filler Component
 export default function FormFiller({ formId, onBack }: { formId: string; onBack: () => void }) {
@@ -14,6 +15,17 @@ export default function FormFiller({ formId, onBack }: { formId: string; onBack:
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
   const [submitting, setSubmitting] = useState<boolean>(false)
+  const [customAlert, setCustomAlert] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'warning' | 'info'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
 
   const API_BASE = 'https://formbuilder-back.vercel.app/api'
 
@@ -54,6 +66,10 @@ export default function FormFiller({ formId, onBack }: { formId: string; onBack:
       ...prev,
       [fieldId]: value
     }))
+  }
+
+  const closeAlert = () => {
+    setCustomAlert(prev => ({ ...prev, isOpen: false }))
   }
 
   // Check if a field should be visible based on conditional logic
@@ -140,9 +156,13 @@ export default function FormFiller({ formId, onBack }: { formId: string; onBack:
       }
 
       const result = await response.json()
-      alert('Form submitted successfully!')
+      setCustomAlert({
+        isOpen: true,
+        title: 'Form Submitted Successfully!',
+        message: 'Your form has been submitted successfully. Thank you for your response!\n',
+        type: 'success'
+      })
       setFormResponses({})
-      onBack()
       console.log('Form submitted:', result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit form')
@@ -357,6 +377,16 @@ export default function FormFiller({ formId, onBack }: { formId: string; onBack:
             <p>Enter a Form ID and click "Load Form" to start filling out a form.</p>
           </div>
         )}
+
+        {/* Custom Alert */}
+        <CustomAlert
+          isOpen={customAlert.isOpen}
+          onClose={closeAlert}
+          title={customAlert.title}
+          message={customAlert.message}
+          type={customAlert.type}
+        />
+
       </div>
     </div>
   )
