@@ -413,8 +413,6 @@ export default function FormBuilder() {
             />
             <p className="text-xs text-gray-500 mt-1">
               Supported formats: Images, PDFs, documents. Max file size: 10MB per file.
-              <br />
-              <span className="text-yellow-600 font-medium">Note: Attachments will be skipped when submitting to Airtable due to technical limitations.</span>
             </p>
           </div>
         )

@@ -346,20 +346,49 @@ router.post('/submit/:formId', async (req, res) => {
         const accessToken = await getUserAccessTokenById(creatorUserId);
 
         // 3) Prepare the Airtable records payload.
-        // We assume `data` keys correspond to Airtable field names. If your app
-        // stores Airtable field IDs instead, translate here using `form.fields`.
-        const fieldsPayload = { ...data };
+        // Map field IDs back to field names for Airtable
+        const fieldsPayload = {};
+        
+        // First, get the current field metadata to map IDs to names
+        const metadataUrl = `https://api.airtable.com/v0/meta/bases/${encodeURIComponent(baseId)}/tables`;
+        const metadataResponse = await axios.get(metadataUrl, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            timeout: 15_000,
+        });
 
-        // Process attachments: skip attachment fields for now as Airtable requires public URLs
-        const skippedAttachments = [];
-        for (const [fieldName, fieldValue] of Object.entries(fieldsPayload)) {
-            if (Array.isArray(fieldValue) && fieldValue.length > 0 && fieldValue[0].base64) {
-                // Skip attachment fields as Airtable requires public URLs
-                skippedAttachments.push(fieldName);
-                delete fieldsPayload[fieldName];
+        if (!metadataResponse || metadataResponse.status < 200 || metadataResponse.status >= 300) {
+            throw new Error(`Failed to fetch table metadata with status ${metadataResponse && metadataResponse.status}`);
+        }
+
+        const tables = Array.isArray(metadataResponse.data?.tables) ? metadataResponse.data.tables : [];
+        const table = tables.find((t) => t.id === tableId);
+        if (!table) {
+            throw new Error('Table not found in metadata');
+        }
+
+        // Create a mapping from field ID to field name
+        const fieldIdToName = {};
+        if (Array.isArray(table.fields)) {
+            table.fields.forEach(field => {
+                fieldIdToName[field.id] = field.name;
+            });
+        }
+
+        // Map the submitted data from field IDs to field names
+        for (const [fieldId, value] of Object.entries(data)) {
+            const fieldName = fieldIdToName[fieldId];
+            if (fieldName) {
+                fieldsPayload[fieldName] = value;
+                console.log(`Mapped field ID "${fieldId}" to name "${fieldName}" with value:`, value);
+            } else {
+                // If we can't find the field name, use the ID as fallback
+                fieldsPayload[fieldId] = value;
+                console.log(`Could not map field ID "${fieldId}", using as-is with value:`, value);
             }
         }
 
+        console.log('Final Airtable payload:', JSON.stringify({ fields: fieldsPayload, typecast: true }, null, 2));
+        
         const url = `https://api.airtable.com/v0/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}`;
         const response = await axios.post(
             url,
@@ -371,12 +400,7 @@ router.post('/submit/:formId', async (req, res) => {
             throw new Error(`Failed to create Airtable record with status ${response && response.status}`);
         }
 
-        const responseData = { record: response.data };
-        if (skippedAttachments.length > 0) {
-            responseData.warning = `Attachment fields (${skippedAttachments.join(', ')}) were skipped. Airtable requires public URLs for attachments.`;
-        }
-
-        return res.status(201).json(responseData);
+        return res.status(201).json({ record: response.data });
     } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error submitting form to Airtable:', error.response?.data || error.message || error);
