@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CustomAlert from './CustomAlert'
 
@@ -18,67 +18,64 @@ export default function OAuthCallback() {
     type: 'info'
   })
 
-  const API_BASE = 'https://formbuilder-back.vercel.app/api'
 
   useEffect(() => {
     const handleCallback = async () => {
-      const code = searchParams.get('code')
-      const state = searchParams.get('state')
+      const success = searchParams.get('success')
+      const user = searchParams.get('user')
       const error = searchParams.get('error')
+      const errorDescription = searchParams.get('error_description')
 
       if (error) {
         setStatus('error')
-        setMessage(`OAuth error: ${error}`)
+        const errorMsg = errorDescription || error
+        setMessage(`OAuth error: ${errorMsg}`)
         setCustomAlert({
           isOpen: true,
           title: 'Authentication Failed',
-          message: `OAuth error: ${error}`,
+          message: `OAuth error: ${errorMsg}`,
           type: 'error'
         })
         return
       }
 
-      if (!code) {
-        setStatus('error')
-        setMessage('Authorization code not provided')
-        setCustomAlert({
-          isOpen: true,
-          title: 'Authentication Failed',
-          message: 'Authorization code not provided',
-          type: 'error'
-        })
-        return
-      }
-
-      try {
-        // Exchange code for tokens (this should be done on the backend)
-        // For now, we'll simulate the callback by storing the code
-        // In a real implementation, this would be handled by the backend callback endpoint
-        
-        // Store the authorization code temporarily
-        localStorage.setItem('oauth_code', code)
-        localStorage.setItem('oauth_state', state || '')
-        
-        setStatus('success')
-        setMessage('Authentication successful! You can close this window.')
-        
-        // Notify the parent window
-        if (window.opener) {
-          window.opener.postMessage({ type: 'OAUTH_SUCCESS', code, state }, '*')
+      if (success === 'true' && user) {
+        try {
+          const userData = JSON.parse(decodeURIComponent(user))
+          
+          // Store user data for the parent window
+          localStorage.setItem('airtable_user', JSON.stringify(userData))
+          
+          setStatus('success')
+          setMessage('Authentication successful! You can close this window.')
+          
+          // Notify the parent window
+          if (window.opener) {
+            window.opener.postMessage({ type: 'OAUTH_SUCCESS', user: userData }, '*')
+          }
+          
+          // Auto-close after a delay
+          setTimeout(() => {
+            window.close()
+          }, 2000)
+          
+        } catch (parseError) {
+          setStatus('error')
+          setMessage('Failed to parse user data')
+          setCustomAlert({
+            isOpen: true,
+            title: 'Authentication Failed',
+            message: 'Failed to parse user data',
+            type: 'error'
+          })
         }
-        
-        // Auto-close after a delay
-        setTimeout(() => {
-          window.close()
-        }, 3000)
-        
-      } catch (error) {
+      } else {
         setStatus('error')
-        setMessage('Failed to complete authentication')
+        setMessage('Authentication failed - no user data received')
         setCustomAlert({
           isOpen: true,
           title: 'Authentication Failed',
-          message: error instanceof Error ? error.message : 'Failed to complete authentication',
+          message: 'Authentication failed - no user data received',
           type: 'error'
         })
       }

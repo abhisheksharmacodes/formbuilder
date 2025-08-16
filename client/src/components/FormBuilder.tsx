@@ -73,7 +73,7 @@ export default function FormBuilder() {
     } finally {
       setLoading(false)
     }
-  }
+    }
 
   // Fetch tables when base is selected
   const fetchTables = async (baseId: string) => {
@@ -457,16 +457,16 @@ export default function FormBuilder() {
       case 'attachment':
         return (
           <div>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => {
-                const files = Array.from(e.target.files || [])
+          <input
+            type="file"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || [])
                 // Store the actual File objects for preview
                 handlePreviewInputChange(field.fieldId, files)
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
             <p className="text-xs text-gray-500 mt-1">
               Supported formats: Images, PDFs, documents. Max file size: 10MB per file.
             </p>
@@ -541,21 +541,21 @@ export default function FormBuilder() {
 
             {/* Table Selection */}
             {canSelectTable && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-900 mb-2">Table</label>
-                <select
-                  value={selectedTable}
-                  onChange={(e) => handleTableSelect(e.target.value)}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">Table</label>
+              <select
+                value={selectedTable}
+                onChange={(e) => handleTableSelect(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a table...</option>
-                  {tables.map((table) => (
-                    <option key={table.id} value={table.id}>
-                      {table.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              >
+                <option value="">Select a table...</option>
+                {tables.map((table) => (
+                  <option key={table.id} value={table.id}>
+                    {table.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             )}
 
             {/* Available Fields */}
@@ -580,42 +580,42 @@ export default function FormBuilder() {
 
           {/* Form Details */}
           {canConfigureFormDetails && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Form Details</h2>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-900 mb-2">Form Name</label>
-                <input
-                  type="text"
-                  value={formDefinition.name}
-                  onChange={(e) => setFormDefinition(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter form name"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    !formDefinition.name.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {!formDefinition.name.trim() && (
-                  <p className="text-xs text-red-600 mt-1">Form name is required</p>
-                )}
-              </div>
-
-              {/* Form Fields Count */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-600">
-                  Fields added: <span className="font-medium">{formDefinition.fields.length}</span>
-                </p>
-              </div>
-
-              {/* Preview Button */}
-              {formDefinition.fields.length > 0 && (
-                <button
-                  onClick={togglePreview}
-                  className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-                >
-                  {showPreview ? 'Hide Preview' : 'Preview Form'}
-                </button>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Form Details</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">Form Name</label>
+              <input
+                type="text"
+                value={formDefinition.name}
+                onChange={(e) => setFormDefinition(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter form name"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  !formDefinition.name.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+              />
+              {!formDefinition.name.trim() && (
+                <p className="text-xs text-red-600 mt-1">Form name is required</p>
               )}
             </div>
+
+            {/* Form Fields Count */}
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Fields added: <span className="font-medium">{formDefinition.fields.length}</span>
+              </p>
+            </div>
+
+            {/* Preview Button */}
+            {formDefinition.fields.length > 0 && (
+              <button
+                onClick={togglePreview}
+                className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+              >
+                {showPreview ? 'Hide Preview' : 'Preview Form'}
+              </button>
+            )}
+          </div>
           )}
         </div>
         )}

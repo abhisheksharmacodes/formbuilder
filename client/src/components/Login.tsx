@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import CustomAlert from './CustomAlert'
 
 interface LoginProps {
@@ -39,11 +39,24 @@ export default function Login({ onLogin }: LoginProps) {
         'width=600,height=700,scrollbars=yes,resizable=yes'
       )
 
-      // Listen for OAuth callback
+      // Listen for OAuth callback messages
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'OAUTH_SUCCESS' && event.data.user) {
+          setLoading(false)
+          popup?.close()
+          onLogin(event.data.user)
+          window.removeEventListener('message', handleMessage)
+        }
+      }
+      
+      window.addEventListener('message', handleMessage)
+
+      // Fallback: check if popup is closed
       const checkPopup = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkPopup)
           setLoading(false)
+          window.removeEventListener('message', handleMessage)
           
           // Check if we have user data in localStorage (set by callback page)
           const userData = localStorage.getItem('airtable_user')
