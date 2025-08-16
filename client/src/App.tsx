@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import FormBuilder from './components/FormBuilder'
 import Dashboard from './components/Dashboard'
 import FormFiller from './components/FormFiller'
 import Login from './components/Login'
 import OAuthCallback from './components/OAuthCallback'
+import OAuthSuccess from './components/OAuthSuccess'
 
 // Main App Component
 function App() {
@@ -63,7 +64,7 @@ function App() {
   }
 
   // Show login if not authenticated
-  if (!user && !location.pathname.includes('/oauth/callback')) {
+  if (!user && !location.pathname.includes('/oauth/callback') && !location.pathname.includes('/oauth-success')) {
     return <Login onLogin={handleLogin} />
   }
 
@@ -121,6 +122,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard onCreateForm={switchToBuilder} onViewForm={switchToFormFiller} />} />
           <Route path="/form/:formId" element={<FormFillerWrapper onBack={switchToDashboard} />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
         </Routes>
       </div>
     </div>
