@@ -27,7 +27,10 @@ const FormFieldSchema = new mongoose.Schema(
     required: { type: Boolean, default: false },
     placeholder: { type: String },
     helpText: { type: String },
-    options: [{ type: String }], // For select-like fields
+    options: [{
+      id: { type: String, required: true },
+      name: { type: String, required: true }
+    }], // For select-like fields
 
     // Conditional logic for this field
     conditionalLogic: {

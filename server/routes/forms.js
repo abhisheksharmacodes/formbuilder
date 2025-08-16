@@ -201,7 +201,7 @@ router.get('/fields/:userId/:baseId/:tableId', async (req, res) => {
  *   name: string,
  *   airtableBaseId: string,
  *   airtableTableId: string,
- *   fields: Array<{ fieldId: string, label: string, type: string, required?: boolean, placeholder?: string, helpText?: string, options?: string[], conditionalLogic?: { match?: 'all'|'any', rules?: Array<{ fieldId: string, operator: string, value: any }> } }>
+ *   fields: Array<{ fieldId: string, label: string, type: string, required?: boolean, placeholder?: string, helpText?: string, options?: Array<{ id: string, name: string }>, conditionalLogic?: { match?: 'all'|'any', rules?: Array<{ fieldId: string, operator: string, value: any }> } }>
  * }
  */
 router.post('/:userId', async (req, res) => {
@@ -346,49 +346,10 @@ router.post('/submit/:formId', async (req, res) => {
         const accessToken = await getUserAccessTokenById(creatorUserId);
 
         // 3) Prepare the Airtable records payload.
-        // Map field IDs back to field names for Airtable
-        const fieldsPayload = {};
-        
-        // First, get the current field metadata to map IDs to names
-        const metadataUrl = `https://api.airtable.com/v0/meta/bases/${encodeURIComponent(baseId)}/tables`;
-        const metadataResponse = await axios.get(metadataUrl, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            timeout: 15_000,
-        });
+        // We assume `data` keys correspond to Airtable field names. If your app
+        // stores Airtable field IDs instead, translate here using `form.fields`.
+        const fieldsPayload = { ...data };
 
-        if (!metadataResponse || metadataResponse.status < 200 || metadataResponse.status >= 300) {
-            throw new Error(`Failed to fetch table metadata with status ${metadataResponse && metadataResponse.status}`);
-        }
-
-        const tables = Array.isArray(metadataResponse.data?.tables) ? metadataResponse.data.tables : [];
-        const table = tables.find((t) => t.id === tableId);
-        if (!table) {
-            throw new Error('Table not found in metadata');
-        }
-
-        // Create a mapping from field ID to field name
-        const fieldIdToName = {};
-        if (Array.isArray(table.fields)) {
-            table.fields.forEach(field => {
-                fieldIdToName[field.id] = field.name;
-            });
-        }
-
-        // Map the submitted data from field IDs to field names
-        for (const [fieldId, value] of Object.entries(data)) {
-            const fieldName = fieldIdToName[fieldId];
-            if (fieldName) {
-                fieldsPayload[fieldName] = value;
-                console.log(`Mapped field ID "${fieldId}" to name "${fieldName}" with value:`, value);
-            } else {
-                // If we can't find the field name, use the ID as fallback
-                fieldsPayload[fieldId] = value;
-                console.log(`Could not map field ID "${fieldId}", using as-is with value:`, value);
-            }
-        }
-
-        console.log('Final Airtable payload:', JSON.stringify({ fields: fieldsPayload, typecast: true }, null, 2));
-        
         const url = `https://api.airtable.com/v0/${encodeURIComponent(baseId)}/${encodeURIComponent(tableId)}`;
         const response = await axios.post(
             url,
